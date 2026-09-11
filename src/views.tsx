@@ -118,18 +118,10 @@ export function LoginView({ onLogin }: { onLogin: (user: any) => void }) {
             {isLoading ? 'جاري التحقق...' : 'دخول'}
           </button>
 
-          <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 text-right">
-            <p className="font-bold mb-2">الحسابات التجريبية (كلمة المرور للجميع: 123):</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>مدير النظام: <strong>admin</strong></li>
-              <li>الطبيب: <strong>dr_ahmed</strong></li>
-              <li>الصيدلي: <strong>pharm_ali</strong></li>
-            </ul>
-          </div>
         </form>
         
         <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-           <p className="text-xs text-gray-400 font-medium">للتجربة: dr_ahmed (طبيب) | pharm_ali (صيدلي) | admin (إداري)<br/>كلمة المرور للجميع: pass123</p>
+           <p className="text-sm text-gray-500 font-bold">جميع الحقوق محفوظة لدي عبدالرحمن علي2026</p>
         </div>
       </div>
     </div>
