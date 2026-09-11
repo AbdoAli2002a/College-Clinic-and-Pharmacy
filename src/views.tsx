@@ -922,7 +922,7 @@ export function PharmacyView({ prescriptions = [], handleDispense }: any) {
           <div className="flex justify-between items-center border-b-2 border-gray-800 pb-6 mb-8">
             <div>
               <h1 className="text-3xl font-black mb-2">وصفة طبية (Prescription)</h1>
-              <p className="text-gray-600 font-bold">العيادة الطبية - جامعة التكنولوجيا</p>
+              <p className="text-gray-600 font-bold">العيادة الطبية - كلية التربية النوعية جامعة المنيا </p>
             </div>
             <div className="text-left">
               <p className="text-sm font-bold">التاريخ: {new Date(rxToPrint.createdAt || Date.now()).toLocaleDateString('ar-EG')}</p>
@@ -1212,7 +1212,7 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
           
           {/* Formal Print Header */}
           <div className="hidden print:block mb-8 pb-4 border-b-2 border-gray-800 text-center">
-            <h1 className="text-2xl font-black text-gray-900 mb-1">العيادة الطبية بكلية التربية النوعية </h1>
+            <h1 className="text-2xl font-black text-gray-900 mb-1">العيادة الطبية بكلية التربية النوعية - جامعة المنيا </h1>
             <h2 className="text-xl font-bold text-gray-700 mb-2">السجل الطبي الموحد (EMR)</h2>
             <p className="text-sm text-gray-500 font-medium">تاريخ الطباعة: {new Date().toLocaleDateString('ar-EG')}</p>
           </div>
@@ -1787,7 +1787,7 @@ export function QueueView({ students = [], queue = [], refreshData }: any) {
             <div className="bg-gray-800 p-6 border-b border-gray-700 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
               <h2 className="text-3xl font-black text-white tracking-wider">شاشة الانتظار</h2>
-              <p className="text-gray-400 mt-2 font-bold text-sm">العيادة الطبية - جامعة التكنولوجيا</p>
+              <p className="text-gray-400 mt-2 font-bold text-sm">العيادة الطبية - كلية التربية النوعية جامعة المنيا </p>
             </div>
             
             <div className="flex-1 p-8 flex flex-col md:flex-row gap-8 bg-gradient-to-b from-gray-900 to-black">
@@ -2370,7 +2370,7 @@ export function AppointmentsView({ appointments = [], students = [], refreshData
       <div className="hidden print:block fixed inset-0 bg-white z-[9999] p-12 text-center text-black print:w-full print:h-full">
          <div className="max-w-md mx-auto border-2 border-gray-800 rounded-2xl p-8 relative mt-12">
            <div className="absolute top-4 right-4"><Calendar size={24} className="text-gray-800" /></div>
-           <h1 className="text-2xl font-black mb-2">العيادة الطبية بكلية التربية النوعية</h1>
+           <h1 className="text-2xl font-black mb-2">العيادة الطبية بكلية التربية النوعية - جامعة المنيا</h1>
            <h2 className="text-lg font-bold border-b border-gray-800 pb-4 mb-6">تذكرة موعد</h2>
            {printingAppt && (
              <div className="text-right space-y-4">
