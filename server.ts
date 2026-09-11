@@ -28,6 +28,10 @@ async function startServer() {
 
   // API endpoints
   
+  app.get('/api/ping', (req, res) => {
+    res.json({ ping: 'pong', env: process.env.NODE_ENV, vercel: !!process.env.VERCEL });
+  });
+
   app.get('/api/debug-env', async (req, res) => {
     try {
       const dbUrl = process.env.DATABASE_URL || "NOT_SET";
@@ -818,8 +822,15 @@ Return a JSON array of up to 3 suggested completions (strings) for the current t
   return app;
 }
 
-const appPromise = startServer();
+const appPromise = startServer().catch(err => {
+  console.error("Failed to start server", err);
+  throw err;
+});
 export default async function handler(req: any, res: any) {
-  const app = await appPromise;
-  app(req, res);
+  try {
+    const app = await appPromise;
+    app(req, res);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Server initialization failed: ' + err.message });
+  }
 }
