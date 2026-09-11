@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { db } from './src/db/index';
 import { users, studentsMedicalRecords, medications, prescriptions, prescriptionItems, appointments, clinicQueue, auditLogs } from './src/db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -31,8 +30,10 @@ async function startServer() {
   
   app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log("LOGIN ATTEMPT:", username, password);
     try {
       const userList = await db.select().from(users).where(eq(users.username, username));
+      console.log("FOUND USERS:", userList);
       const user = userList[0];
 
       if (user && user.password === password) {
@@ -771,6 +772,7 @@ Return a JSON array of up to 3 suggested completions (strings) for the current t
   });
 
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
