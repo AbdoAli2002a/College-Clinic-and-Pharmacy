@@ -1,9 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { db } from './src/db/index';
 import { users, studentsMedicalRecords, medications, prescriptions, prescriptionItems, appointments, clinicQueue, auditLogs } from './src/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import 'dotenv/config';
 
 async function logAudit(userId: string, userName: string, action: string, entity: string, entityId: string | null = null, details: string | null = null) {
   try {
@@ -28,6 +28,25 @@ async function startServer() {
 
   // API endpoints
   
+  app.get('/api/debug-env', async (req, res) => {
+    try {
+      const dbUrl = process.env.DATABASE_URL || "NOT_SET";
+      
+      // Don't reveal full password in logs, just check if it's there
+      const maskedUrl = dbUrl !== "NOT_SET" ? 
+        dbUrl.replace(/:([^:@]+)@/, ':***@') : "NOT_SET";
+
+      res.json({ 
+        dbUrlSet: dbUrl !== "NOT_SET",
+        maskedUrl,
+        nodeEnv: process.env.NODE_ENV,
+        hasSqlUser: !!process.env.SQL_USER
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     console.log("LOGIN ATTEMPT:", username, password);

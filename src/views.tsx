@@ -30,11 +30,16 @@ export function LoginView({ onLogin }: { onLogin: (user: any) => void }) {
         onLogin(data.user);
         return;
       } else {
-        const err = await res.json().catch(() => ({}));
+        const text = await res.text().catch(() => '');
+        let err;
+        try { err = JSON.parse(text); } catch(e) { err = {}; }
+        
         if (err.error) {
           setError(err.error);
-          return;
+        } else {
+          setError(`تعذر الاتصال بقاعدة البيانات. تأكد من إضافة DATABASE_URL في إعدادات Vercel. (Code: ${res.status})`);
         }
+        return;
       }
     } catch (err) {
       // Offline / Static fallback (e.g. Vercel static deployment)
