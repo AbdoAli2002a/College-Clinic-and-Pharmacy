@@ -1,0 +1,15 @@
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-gray-400 font-medium">لا توجد سجلات نشاط متاحة</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+

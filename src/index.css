@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Force recharts containers to fixed dimensions to prevent collapsing */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 250px;
+  }
+}
