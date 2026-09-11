@@ -4,7 +4,7 @@ import * as schema from './schema';
 
 let pool: Pool;
 
-if (process.env.DATABASE_URL) {
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')) {
   // Use connection string if provided (e.g., from Vercel, Supabase, Neon)
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
