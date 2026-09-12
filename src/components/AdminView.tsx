@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, X, Edit2, Trash2 } from 'lucide-react';
+import { Users, Plus, X, Edit2, Trash2, Download } from 'lucide-react';
 
 export function AdminView() {
   const [users, setUsers] = useState<any[]>([]);
@@ -83,15 +83,58 @@ export function AdminView() {
     admin: 'مدير النظام'
   };
 
+  const handleBackup = async () => {
+    try {
+      const [usersRes, prescriptionsRes, medsRes, studentsRes, queueRes, apptsRes, logsRes] = await Promise.all([
+        fetch('/api/users'),
+        fetch('/api/prescriptions'),
+        fetch('/api/medications'),
+        fetch('/api/students'),
+        fetch('/api/queue'),
+        fetch('/api/appointments'),
+        fetch('/api/audit-logs')
+      ].map(p => p.catch(() => ({ json: () => Promise.resolve([]) } as any)))); // Prevent whole Promise.all from failing if one endpoint fails
+
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        users: await usersRes.json().catch(() => []),
+        prescriptions: await prescriptionsRes.json().catch(() => []),
+        medications: await medsRes.json().catch(() => []),
+        students: await studentsRes.json().catch(() => []),
+        queue: await queueRes.json().catch(() => []),
+        appointments: await apptsRes.json().catch(() => []),
+        auditLogs: await logsRes.json().catch(() => [])
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clinic_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Backup failed:', e);
+      alert('حدث خطأ أثناء تحميل النسخة الاحتياطية');
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm gap-4">
         <h2 className="font-bold text-xl text-gray-800 flex items-center gap-2">
           <Users className="text-blue-600"/> إدارة الحسابات
         </h2>
-        <button onClick={handleOpenAdd} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-sm">
-          <Plus size={18}/> حساب جديد
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <button onClick={handleBackup} className="flex-1 sm:flex-none px-5 py-2.5 bg-green-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition shadow-sm">
+            <Download size={18}/> نسخة احتياطية
+          </button>
+          <button onClick={handleOpenAdd} className="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition shadow-sm">
+            <Plus size={18}/> حساب جديد
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

@@ -13,3 +13,22 @@
     min-height: 250px;
   }
 }
+
+/* Dark Mode Invert Approach */
+html {
+  background-color: #f9fafb; /* Matches bg-gray-50 */
+}
+html.dark {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111; 
+}
+html.dark img, 
+html.dark video,
+html.dark [data-ignore-dark] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Ensure background of app root stays inverted properly */
+html.dark #root {
+  background-color: transparent;
+}

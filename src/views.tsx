@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Prescription, Medication } from './types';
-import { Search, ListTodo, Pill, Stethoscope, Check, Activity, FileText, Package, AlertTriangle, TrendingUp, BarChart2, Users, Plus, Edit2, Trash2, X, Printer, Download, Calendar, Clock, CheckCircle, FileOutput, Lock, User, Key, Scan, Camera, Sparkles } from 'lucide-react';
+import { Search, ListTodo, Pill, Stethoscope, Check, Activity, FileText, Package, AlertTriangle, TrendingUp, BarChart2, Users, Plus, Edit2, Trash2, X, Printer, Download, Calendar, Clock, CheckCircle, FileOutput, Lock, User, Key, Scan, Camera, Sparkles, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -115,7 +115,14 @@ export function LoginView({ onLogin }: { onLogin: (user: any) => void }) {
             disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm disabled:opacity-70 flex justify-center items-center gap-2 mt-4"
           >
-            {isLoading ? 'جاري التحقق...' : 'دخول'}
+            {isLoading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                <span>جاري التحقق...</span>
+              </>
+            ) : (
+              'دخول'
+            )}
           </button>
 
         </form>
@@ -140,6 +147,15 @@ export function DashboardView({ prescriptions = [], medications = [], students =
   });
   const [newTodo, setNewTodo] = useState('');
   const [isTodoOpen, setIsTodoOpen] = useState(false);
+  const [showExpiryAlert, setShowExpiryAlert] = useState(true);
+
+  const expiringMeds = medications.filter((m: any) => {
+    if (!m.expiryDate) return false;
+    const expDate = new Date(m.expiryDate);
+    const today = new Date();
+    const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 90;
+  });
 
   useEffect(() => {
     localStorage.setItem('personal_todos', JSON.stringify(todos));
@@ -181,7 +197,37 @@ export function DashboardView({ prescriptions = [], medications = [], students =
   ];
 
   return (
-    <div className="p-6 flex-1 grid grid-cols-1 md:grid-cols-12 gap-6">
+    <div className="p-6 flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 relative">
+      {showExpiryAlert && expiringMeds.length > 0 && (
+        <div className="absolute top-4 left-4 md:left-auto md:right-4 z-50 bg-white p-4 rounded-xl shadow-2xl border-2 border-red-100 w-80">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-red-600 flex items-center gap-2">
+              <AlertTriangle size={18} />
+              تنبيه: أدوية تقارب الانتهاء
+            </h3>
+            <button onClick={() => setShowExpiryAlert(false)} className="text-gray-400 hover:text-gray-600">
+              <X size={16} />
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 font-medium mb-3">
+            يوجد {expiringMeds.length} أدوية ستنتهي صلاحيتها قريباً أو منتهية بالفعل (أقل من 90 يوم).
+          </p>
+          <div className="max-h-40 overflow-y-auto space-y-2 pr-1 text-sm font-medium">
+            {expiringMeds.map((med: any) => {
+              const diffDays = Math.ceil((new Date(med.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+              return (
+                <div key={med.id} className="bg-red-50 p-2 rounded-lg border border-red-100 flex justify-between items-center">
+                  <span className="text-gray-800">{med.name}</span>
+                  <span className={`font-bold text-xs ${diffDays < 0 ? 'text-red-700 bg-red-200 px-2 py-0.5 rounded-full' : 'text-red-600'}`}>
+                    {diffDays < 0 ? 'منتهي!' : `باقي ${diffDays} يوم`}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="col-span-1 md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
           <div className="flex justify-between items-center mb-1">
@@ -773,15 +819,15 @@ export function ClinicView({ medications = [], students = [], queue = [], handle
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">ضغط الدم</label>
-                    <input type="text" placeholder="مثال: 120/80" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.bloodPressure} onChange={e => setVitals({...vitals, bloodPressure: e.target.value})} />
+                    <input type="text" tabIndex={1} placeholder="مثال: 120/80" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.bloodPressure} onChange={e => setVitals({...vitals, bloodPressure: e.target.value})} />
                   </div>
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">الحرارة (°C)</label>
-                    <input type="text" placeholder="مثال: 37.2" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.temperature} onChange={e => setVitals({...vitals, temperature: e.target.value})} />
+                    <input type="text" tabIndex={2} placeholder="مثال: 37.2" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.temperature} onChange={e => setVitals({...vitals, temperature: e.target.value})} />
                   </div>
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">معدل النبض (bpm)</label>
-                    <input type="text" placeholder="مثال: 75" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.heartRate} onChange={e => setVitals({...vitals, heartRate: e.target.value})} />
+                    <input type="text" tabIndex={3} placeholder="مثال: 75" className="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 outline-blue-500 text-sm focus:bg-white transition-all" value={vitals.heartRate} onChange={e => setVitals({...vitals, heartRate: e.target.value})} />
                   </div>
                 </div>
               </div>
@@ -802,7 +848,7 @@ export function ClinicView({ medications = [], students = [], queue = [], handle
                     إكمال ذكي
                   </button>
                 </div>
-                <textarea value={diagnosis} onChange={e=>setDiagnosis(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 h-32 text-sm outline-blue-500 transition-all focus:bg-white focus:shadow-sm" placeholder="اكتب التشخيص التفصيلي هنا... (الذكاء الاصطناعي يمكنه الإكمال)"></textarea>
+                <textarea tabIndex={4} value={diagnosis} onChange={e=>setDiagnosis(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 h-32 text-sm outline-blue-500 transition-all focus:bg-white focus:shadow-sm" placeholder="اكتب التشخيص التفصيلي هنا... (الذكاء الاصطناعي يمكنه الإكمال)"></textarea>
                 
                 {suggestions.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-purple-100 shadow-lg rounded-xl overflow-hidden">
@@ -829,7 +875,7 @@ export function ClinicView({ medications = [], students = [], queue = [], handle
               </div>
               <div>
                 <label className="text-sm font-bold block mb-2 text-gray-700">خطة علاجية / ملاحظات إضافية (اختياري)</label>
-                <textarea value={notes} onChange={e=>setNotes(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 h-24 text-sm outline-blue-500 transition-all focus:bg-white focus:shadow-sm" placeholder="ملاحظات وتوصيات للمريض..."></textarea>
+                <textarea tabIndex={5} value={notes} onChange={e=>setNotes(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 h-24 text-sm outline-blue-500 transition-all focus:bg-white focus:shadow-sm" placeholder="ملاحظات وتوصيات للمريض..."></textarea>
               </div>
               <div>
                 <div className="flex justify-between items-center mb-3">
@@ -888,7 +934,7 @@ export function ClinicView({ medications = [], students = [], queue = [], handle
                 ) : <p className="text-sm text-gray-400 p-6 text-center border border-dashed border-gray-300 rounded-lg bg-gray-50">لم يتم إضافة أي أدوية للروشتة بعد.</p>}
               </div>
           </div>
-          <button onClick={submit} disabled={currentMeds.length===0} className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-md">
+          <button tabIndex={6} onClick={submit} disabled={currentMeds.length===0} className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-md">
             اعتماد الوصفة وإرسالها للصيدلية
           </button>
         </div>
@@ -898,6 +944,28 @@ export function ClinicView({ medications = [], students = [], queue = [], handle
 
 export function PharmacyView({ prescriptions = [], handleDispense }: any) {
   const [rxToPrint, setRxToPrint] = useState<any>(null);
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const dispensedMedsMap = new Map();
+  prescriptions
+    .filter((rx: any) => rx.status === 'dispensed')
+    .forEach((rx: any) => {
+      const rxDate = new Date(rx.dispensedAt || rx.date || rx.createdAt);
+      if (rxDate >= startOfMonth) {
+        rx.items?.forEach((item: any) => {
+           const medName = item.medication?.name || item.name || 'غير معروف';
+           dispensedMedsMap.set(medName, (dispensedMedsMap.get(medName) || 0) + 1);
+        });
+      }
+    });
+
+  const topMedications = Array.from(dispensedMedsMap.entries())
+    .map(([name, count]) => ({ name, value: count }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
 
   const handlePrint = (rx: any) => {
     setRxToPrint(rx);
@@ -976,6 +1044,34 @@ export function PharmacyView({ prescriptions = [], handleDispense }: any) {
         </div>
       )}
 
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm print:hidden">
+        <div className="flex items-center gap-2 mb-6 border-b pb-3">
+          <Activity size={24} className="text-blue-600" />
+          <h3 className="font-bold text-gray-800 text-lg">أكثر 5 أدوية استهلاكاً (الشهر الحالي)</h3>
+        </div>
+        {topMedications.length > 0 ? (
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topMedications} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="name" tick={{ fill: '#4b5563', fontSize: 12, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ fontWeight: 'bold', color: '#1f2937', marginBottom: '4px' }}
+                />
+                <Bar dataKey="value" name="عدد الوصفات" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-48 text-gray-400 space-y-3">
+              <Package size={32} className="opacity-20" />
+              <p className="text-sm font-medium">لا توجد بيانات كافية لهذا الشهر</p>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-[600px]">
             <h3 className="font-bold text-gray-800 mb-4 border-b pb-3 flex justify-between items-center">
@@ -1231,6 +1327,15 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
                       <li className="flex justify-between text-gray-600 print:flex-col print:justify-start">الأمراض المزمنة <span className="font-bold text-gray-800 print:mt-1">{selectedStudent.chronicDiseases}</span></li>
                     </ul>
                 </div>
+                {(selectedStudent.lastModifiedBy || selectedStudent.lastModifiedAt) && (
+                  <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-xs">
+                    <h4 className="font-bold text-blue-900 mb-1 flex items-center gap-1.5"><Clock size={14} className="text-blue-500" /> آخر تحديث للبيانات</h4>
+                    <div className="flex flex-col gap-1 text-gray-600">
+                      {selectedStudent.lastModifiedBy && <span>بواسطة: <span className="font-bold text-gray-800">{selectedStudent.lastModifiedBy}</span></span>}
+                      {selectedStudent.lastModifiedAt && <span>بتاريخ: <span className="font-bold text-gray-800" dir="ltr">{new Date(selectedStudent.lastModifiedAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })}</span></span>}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="col-span-1 md:col-span-2 space-y-4 print:col-span-1 print:mt-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 border-b pb-3 print:border-gray-300 gap-3">
@@ -1403,28 +1508,28 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">اسم المريض الكامل</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.name} onChange={e => setNewPatientData({...newPatientData, name: e.target.value})} />
+                <input type="text" tabIndex={1} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.name} onChange={e => setNewPatientData({...newPatientData, name: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الرقم الجامعي</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.universityId} onChange={e => setNewPatientData({...newPatientData, universityId: e.target.value})} />
+                <input type="text" tabIndex={2} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.universityId} onChange={e => setNewPatientData({...newPatientData, universityId: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">فصيلة الدم</label>
-                <input type="text" placeholder="مثال: O+" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.bloodType} onChange={e => setNewPatientData({...newPatientData, bloodType: e.target.value})} />
+                <input type="text" tabIndex={3} placeholder="مثال: O+" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.bloodType} onChange={e => setNewPatientData({...newPatientData, bloodType: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الحساسية</label>
-                <input type="text" placeholder="مثال: بنسلين (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.allergies} onChange={e => setNewPatientData({...newPatientData, allergies: e.target.value})} />
+                <input type="text" tabIndex={4} placeholder="مثال: بنسلين (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.allergies} onChange={e => setNewPatientData({...newPatientData, allergies: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الأمراض المزمنة</label>
-                <input type="text" placeholder="مثال: ربو (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.chronicDiseases} onChange={e => setNewPatientData({...newPatientData, chronicDiseases: e.target.value})} />
+                <input type="text" tabIndex={5} placeholder="مثال: ربو (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={newPatientData.chronicDiseases} onChange={e => setNewPatientData({...newPatientData, chronicDiseases: e.target.value})} />
               </div>
             </div>
             <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
               <button onClick={() => setIsAddPatientModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">إلغاء</button>
-              <button onClick={handleAddPatient} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-sm">
+              <button onClick={handleAddPatient} tabIndex={6} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-sm">
                 إضافة المريض
               </button>
             </div>
@@ -1442,7 +1547,7 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">اسم المريض الكامل</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.name} onChange={e => setEditingPatientData({...editingPatientData, name: e.target.value})} />
+                <input type="text" tabIndex={1} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.name} onChange={e => setEditingPatientData({...editingPatientData, name: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الرقم الجامعي</label>
@@ -1450,20 +1555,20 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">فصيلة الدم</label>
-                <input type="text" placeholder="مثال: O+" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.bloodType} onChange={e => setEditingPatientData({...editingPatientData, bloodType: e.target.value})} />
+                <input type="text" tabIndex={2} placeholder="مثال: O+" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.bloodType} onChange={e => setEditingPatientData({...editingPatientData, bloodType: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الحساسية</label>
-                <input type="text" placeholder="مثال: بنسلين (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.allergies} onChange={e => setEditingPatientData({...editingPatientData, allergies: e.target.value})} />
+                <input type="text" tabIndex={3} placeholder="مثال: بنسلين (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.allergies} onChange={e => setEditingPatientData({...editingPatientData, allergies: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الأمراض المزمنة</label>
-                <input type="text" placeholder="مثال: ربو (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.chronicDiseases} onChange={e => setEditingPatientData({...editingPatientData, chronicDiseases: e.target.value})} />
+                <input type="text" tabIndex={4} placeholder="مثال: ربو (أو 'لا يوجد')" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={editingPatientData.chronicDiseases} onChange={e => setEditingPatientData({...editingPatientData, chronicDiseases: e.target.value})} />
               </div>
             </div>
             <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
               <button onClick={() => setIsEditPatientModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">إلغاء</button>
-              <button onClick={handleEditPatient} className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition shadow-sm">
+              <button onClick={handleEditPatient} tabIndex={5} className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition shadow-sm">
                 حفظ التعديلات
               </button>
             </div>
@@ -1475,17 +1580,29 @@ export function EMRView({ students = [], refreshData, currentUser }: any) {
 }
 
 export function InventoryView({ medications = [], refreshData, currentUser }: any) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchScannerOpen, setIsSearchScannerOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('الكل');
+  const CATEGORIES = ['مسكنات', 'مضادات حيوية', 'فيتامينات', 'أدوية مزمنة', 'مستلزمات طبية', 'أخرى'];
+
+
+  const filteredMedications = medications.filter((m: any) => {
+    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.barcode.includes(searchQuery);
+    const matchesCategory = selectedCategory === 'الكل' || m.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   const needsReorder = medications.filter((m: any) => m.quantity <= m.reorderLevel).length;
   const lowStock = medications.filter((m: any) => m.quantity > m.reorderLevel && m.quantity <= m.reorderLevel + 10).length;
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [formData, setFormData] = useState<any>({ barcode: '', name: '', quantity: '', reorderLevel: '' });
+  const [formData, setFormData] = useState<any>({ barcode: '', name: '', category: '', quantity: '', reorderLevel: '', expiryDate: '' });
 
   const openAddModal = () => {
     setModalMode('add');
-    setFormData({ barcode: '', name: '', quantity: '', reorderLevel: '' });
+    setFormData({ barcode: '', name: '', category: '', quantity: '', reorderLevel: '', expiryDate: '' });
     setIsModalOpen(true);
   };
 
@@ -1552,9 +1669,20 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
           </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold text-gray-800 text-lg">قائمة الأدوية والمستلزمات</h3>
-        <button onClick={openAddModal} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-1 w-full flex flex-col md:flex-row gap-2">
+            <div className="flex-1 flex gap-2">
+              <input type="text" placeholder="بحث بالاسم أو الباركود..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg outline-blue-500 font-medium" />
+              <button onClick={() => setIsSearchScannerOpen(true)} className="p-2.5 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-200 transition shrink-0" title="مسح باركود للبحث">
+                <Scan size={20} />
+              </button>
+            </div>
+            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="p-2.5 border border-gray-300 rounded-lg outline-blue-500 bg-white font-medium text-gray-700 min-w-[150px]">
+              <option value="الكل">جميع التصنيفات</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+        </div>
+        <button onClick={openAddModal} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition w-full sm:w-auto shadow-sm">
           <Plus size={18} />
           إضافة دواء جديد
         </button>
@@ -1567,6 +1695,8 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
                 <tr>
                   <th className="p-5 font-bold">الباركود</th>
                   <th className="p-5 font-bold">اسم الدواء</th>
+                  <th className="p-5 font-bold">التصنيف</th>
+                  <th className="p-5 font-bold">تاريخ الانتهاء</th>
                   <th className="p-5 font-bold">الكمية المتوفرة</th>
                   <th className="p-5 font-bold">حد إعادة الطلب</th>
                   <th className="p-5 font-bold">الحالة</th>
@@ -1574,7 +1704,7 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {medications.map((m: any) => (
+                {filteredMedications.map((m: any) => (
                   <tr key={m.id} className={`transition ${m.quantity <= m.reorderLevel ? 'bg-red-50 hover:bg-red-100 border-r-4 border-red-500' : 'hover:bg-gray-50'}`}>
                     <td className="p-5 font-mono text-gray-500">{m.barcode}</td>
                     <td className="p-5 font-bold text-gray-800 flex items-center gap-2">
@@ -1586,6 +1716,8 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
                       )}
                       {m.name}
                     </td>
+                    <td className="p-5 text-gray-500 font-medium">{m.category ? <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">{m.category}</span> : '-'}</td>
+                    <td className="p-5 text-gray-500 font-medium">{m.expiryDate ? new Date(m.expiryDate).toLocaleDateString('ar-EG') : '-'}</td>
                     <td className={`p-5 font-bold text-lg ${m.quantity === 0 ? 'text-red-600' : m.quantity <= m.reorderLevel ? 'text-orange-600' : m.quantity <= m.reorderLevel + 10 ? 'text-yellow-600' : 'text-green-600'}`}>{m.quantity}</td>
                     <td className="p-5 text-gray-500 font-medium">{m.reorderLevel}</td>
                     <td className="p-5">
@@ -1613,6 +1745,27 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
             </table>
           </div>
       </div>
+
+      {isSearchScannerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-gray-800">مسح باركود للبحث</h3>
+              <button onClick={() => setIsSearchScannerOpen(false)} className="text-gray-500 hover:text-gray-800"><X size={20}/></button>
+            </div>
+            <QRScanner 
+              onScanSuccess={(decoded) => {
+                setSearchQuery(decoded);
+                setIsSearchScannerOpen(false);
+                const exactMatch = medications.find((med: any) => med.barcode === decoded);
+                if (exactMatch) {
+                  openEditModal(exactMatch);
+                }
+              }} 
+            />
+          </div>
+        </div>
+      )}
 
       {isScannerOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
@@ -1642,7 +1795,7 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">الباركود (رقم الصنف)</label>
                 <div className="flex gap-2">
-                  <input type="text" className="flex-1 border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} />
+                  <input type="text" tabIndex={1} className="flex-1 border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} />
                   <button onClick={() => setIsScannerOpen(true)} className="px-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg border border-gray-300 transition">
                     <Scan size={20} />
                   </button>
@@ -1650,22 +1803,26 @@ export function InventoryView({ medications = [], refreshData, currentUser }: an
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">اسم الدواء</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                <input type="text" tabIndex={2} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">الكمية الحالية</label>
-                  <input type="number" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} />
+                  <input type="number" tabIndex={3} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">حد إعادة الطلب</label>
-                  <input type="number" className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.reorderLevel} onChange={e => setFormData({...formData, reorderLevel: e.target.value})} />
+                  <input type="number" tabIndex={4} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.reorderLevel} onChange={e => setFormData({...formData, reorderLevel: e.target.value})} />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">تاريخ الانتهاء</label>
+                <input type="date" tabIndex={5} className="w-full border border-gray-300 rounded-lg p-2.5 outline-blue-500" value={formData.expiryDate} onChange={e => setFormData({...formData, expiryDate: e.target.value})} />
               </div>
             </div>
             <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-lg transition">إلغاء</button>
-              <button onClick={handleSave} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-sm">
+              <button onClick={handleSave} tabIndex={6} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-sm">
                 حفظ البيانات
               </button>
             </div>

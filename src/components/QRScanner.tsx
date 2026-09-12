@@ -12,7 +12,7 @@ export default function QRScanner({ onScanSuccess, onScanFailure }: QRScannerPro
   useEffect(() => {
     scannerRef.current = new Html5QrcodeScanner(
       "qr-reader",
-      { fps: 10, qrbox: { width: 250, height: 250 }, supportedScanTypes: [] },
+      { fps: 10, qrbox: { width: 250, height: 250 },   },
       false
     );
 

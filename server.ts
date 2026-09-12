@@ -192,7 +192,9 @@ async function startServer() {
       await db.update(studentsMedicalRecords).set({
         bloodType,
         allergies,
-        chronicDiseases
+        chronicDiseases,
+        lastModifiedBy: adminName || adminId || null,
+        lastModifiedAt: new Date()
       }).where(eq(studentsMedicalRecords.universityId, req.params.id));
       
       if (adminId) {
@@ -533,12 +535,14 @@ Return a JSON array of up to 3 suggested completions (strings) for the current t
   // 6. Add a medication
   app.post('/api/medications', async (req, res) => {
     try {
-      const { barcode, name, quantity, reorderLevel, userId, userName } = req.body;
+      const { barcode, name, category, quantity, reorderLevel, expiryDate, userId, userName } = req.body;
       const [newMed] = await db.insert(medications).values({
         barcode,
         name,
+        category,
         quantity: parseInt(quantity) || 0,
-        reorderLevel: parseInt(reorderLevel) || 10
+        reorderLevel: parseInt(reorderLevel) || 10,
+        expiryDate: expiryDate ? new Date(expiryDate) : null
       }).returning();
       
       if (userId) {
@@ -556,21 +560,22 @@ Return a JSON array of up to 3 suggested completions (strings) for the current t
   app.put('/api/medications/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { barcode, name, quantity, reorderLevel, userId, userName } = req.body;
+      const { barcode, name, category, quantity, reorderLevel, expiryDate, userId, userName } = req.body;
       const [updated] = await db.update(medications)
         .set({ 
           barcode, 
           name, 
+          category,
           quantity: parseInt(quantity), 
-          reorderLevel: parseInt(reorderLevel) 
-        })
+          reorderLevel: parseInt(reorderLevel),
+          expiryDate: expiryDate ? new Date(expiryDate) : null
+         })
         .where(eq(medications.id, id))
         .returning();
       
       if (userId && updated) {
         await logAudit(userId, userName, 'تعديل دواء', 'Medication', updated.id.toString(), `تم تعديل بيانات أو كمية الدواء ${name}`);
       }
-
       res.json(updated);
     } catch (error) {
       console.error(error);

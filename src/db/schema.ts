@@ -20,6 +20,8 @@ export const studentsMedicalRecords = pgTable('student_medical_records', {
   allergies: text('allergies'),
   chronicDiseases: text('chronic_diseases'),
   rfidTag: varchar('rfid_tag', { length: 100 }).unique(),
+  lastModifiedBy: varchar('last_modified_by', { length: 255 }),
+  lastModifiedAt: timestamp('last_modified_at'),
 });
 
 // Medications (Inventory)
@@ -27,6 +29,7 @@ export const medications = pgTable('medications', {
   id: serial('id').primaryKey(),
   barcode: varchar('barcode', { length: 100 }).unique().notNull(),
   name: text('name').notNull(),
+  category: varchar('category', { length: 100 }),
   quantity: integer('quantity').notNull().default(0),
   reorderLevel: integer('reorder_level').notNull().default(10),
   expiryDate: timestamp('expiry_date'),
